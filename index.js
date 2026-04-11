@@ -293,7 +293,7 @@ app.get("/api/sliders", async (req, res) => {
     }
 });
 
-app.get("/api/sliders", async (req, res) => {
+app.get("/api/sliders/active", async (req, res) => {
     try {
         const data = await Slider.find({ isActive: true })
             .sort({ order: 1 }); // 🔥 sorted
@@ -998,6 +998,63 @@ app.post("/api/admin/order/update", async (req, res) => {
 
 
 
+app.get("/api/admin/dashboard", async (req, res) => {
+    try {
+        const [
+            products,
+            orders,
+            users,
+            categories,
+            reviews,
+            carts,
+            banners,
+            sliders,
+            ads,
+            addresses
+        ] = await Promise.all([
+            Product.countDocuments(),
+            Order.countDocuments(),
+            User.countDocuments(),
+            Category.countDocuments(),
+            Review.countDocuments(),
+            Cart.countDocuments(),
+            Banner.countDocuments(),
+            Slider.countDocuments(),
+            Ad.countDocuments(),
+            Address.countDocuments()
+        ]);
+
+        // 💰 Revenue
+        const revenueData = await Order.aggregate([
+            {
+                $group: {
+                    _id: null,
+                    total: { $sum: "$total" }
+                }
+            }
+        ]);
+
+        const revenue = revenueData[0]?.total || 0;
+
+        res.json({
+            products,
+            orders,
+            users,
+            categories,
+            reviews,
+            carts,
+            banners,
+            sliders,
+            ads,
+            addresses,
+            revenue
+        });
+
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: "Dashboard error" });
+    }
+});
 
 
 
