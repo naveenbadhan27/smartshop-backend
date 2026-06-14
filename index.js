@@ -2,6 +2,8 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 
+const { ObjectId } = require("mongodb");
+
 const app = express();
 
 // Middleware
@@ -114,22 +116,375 @@ app.delete("/api/categories/:id", async (req, res) => {
 // category ends
 
 
+const productSchema = new mongoose.Schema(
+    {
+        // =====================================
+        // BASIC INFORMATION
+        // =====================================
 
-const productSchema = new mongoose.Schema({
-    name: String,
-    price: Number,
-    image: String,
-    categoryId: String,
-    description: String,
-    discount: Number,
-    isPopular: Boolean,
-    isBestDeal: Boolean,
-    isUpcoming: Boolean,
-    createdAt: {
-        type: Date,
-        default: Date.now
+        name: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+
+        slug: {
+            type: String,
+            default: "",
+        },
+
+        brand: {
+            type: String,
+            default: "",
+        },
+
+        sku: {
+            type: String,
+            default: "",
+        },
+
+        categoryId: {
+            type: String,
+            required: true,
+        },
+
+        // =====================================
+        // IMAGES
+        // =====================================
+
+        image: {
+            type: String,
+            default: "",
+        },
+
+        galleryImages: {
+            type: [String],
+            default: [],
+        },
+
+        // =====================================
+        // DESCRIPTION
+        // =====================================
+
+        shortDescription: {
+            type: String,
+            default: "",
+        },
+
+        description: {
+            type: String,
+            default: "",
+        },
+
+        // =====================================
+        // PRICING
+        // =====================================
+
+        price: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
+
+        discount: {
+            type: Number,
+            default: 0,
+            min: 0,
+            max: 100,
+        },
+
+        salePrice: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
+
+        // =====================================
+        // INVENTORY
+        // =====================================
+
+        stock: {
+            type: Number,
+            default: 0,
+            min: 0,
+        },
+
+        lowStockThreshold: {
+            type: Number,
+            default: 5,
+        },
+
+        trackInventory: {
+            type: Boolean,
+            default: true,
+        },
+
+        // =====================================
+        // PRODUCT STATUS
+        // =====================================
+
+        status: {
+            type: String,
+            enum: [
+                "active",
+                "draft",
+                "upcoming",
+                "out_of_stock",
+            ],
+            default: "active",
+        },
+
+        // =====================================
+        // ATTRIBUTES
+        // WooCommerce Style
+        // =====================================
+
+        attributes: [
+            {
+                name: {
+                    type: String,
+                    required: true,
+                },
+
+                values: {
+                    type: [String],
+                    default: [],
+                },
+
+                visible: {
+                    type: Boolean,
+                    default: true,
+                },
+
+                usedForVariants: {
+                    type: Boolean,
+                    default: true,
+                },
+            },
+        ],
+
+        // =====================================
+        // GENERATED VARIANTS
+        // =====================================
+
+        variants: [
+            {
+                attributes: {
+                    type: Object,
+                    default: {},
+                },
+
+                price: {
+                    type: Number,
+                    default: 0,
+                    min: 0,
+                },
+
+                salePrice: {
+                    type: Number,
+                    default: 0,
+                    min: 0,
+                },
+
+                stock: {
+                    type: Number,
+                    default: 0,
+                    min: 0,
+                },
+
+                sku: {
+                    type: String,
+                    default: "",
+                },
+
+                image: {
+                    type: String,
+                    default: "",
+                },
+
+                isActive: {
+                    type: Boolean,
+                    default: true,
+                },
+            },
+        ],
+
+        // =====================================
+        // SPECIFICATIONS
+        // =====================================
+
+        specifications: [
+            {
+                key: {
+                    type: String,
+                    required: true,
+                },
+
+                value: {
+                    type: String,
+                    required: true,
+                },
+            },
+        ],
+
+        // =====================================
+        // SEO
+        // =====================================
+
+        seoTitle: {
+            type: String,
+            default: "",
+        },
+
+        seoDescription: {
+            type: String,
+            default: "",
+        },
+
+        seoKeywords: {
+            type: String,
+            default: "",
+        },
+
+        // =====================================
+        // FLAGS
+        // =====================================
+
+        isPopular: {
+            type: Boolean,
+            default: false,
+        },
+
+        isBestDeal: {
+            type: Boolean,
+            default: false,
+        },
+
+        isUpcoming: {
+            type: Boolean,
+            default: false,
+        },
+
+        isFeatured: {
+            type: Boolean,
+            default: false,
+        },
+
+        isTrending: {
+            type: Boolean,
+            default: false,
+        },
+
+        isNewArrival: {
+            type: Boolean,
+            default: false,
+        },
+
+        // =====================================
+        // REVIEWS
+        // =====================================
+
+        averageRating: {
+            type: Number,
+            default: 0,
+        },
+
+        reviewCount: {
+            type: Number,
+            default: 0,
+        },
+
+        // =====================================
+        // ANALYTICS
+        // =====================================
+
+        views: {
+            type: Number,
+            default: 0,
+        },
+
+        wishlistCount: {
+            type: Number,
+            default: 0,
+        },
+
+        compareCount: {
+            type: Number,
+            default: 0,
+        },
+
+        purchaseCount: {
+            type: Number,
+            default: 0,
+        },
+
+        // =====================================
+        // COMPARISON
+        // =====================================
+
+        comparisonEnabled: {
+            type: Boolean,
+            default: true,
+        },
+
+        // =====================================
+        // BUNDLE BUILDER
+        // =====================================
+
+        bundleEligible: {
+            type: Boolean,
+            default: false,
+        },
+
+        // =====================================
+        // PRODUCT BATTLE
+        // =====================================
+
+        battleVotes: {
+            wins: {
+                type: Number,
+                default: 0,
+            },
+
+            losses: {
+                type: Number,
+                default: 0,
+            },
+        },
+
+        // =====================================
+        // PRODUCT SCORING
+        // =====================================
+
+        performanceScore: {
+            type: Number,
+            default: 0,
+        },
+
+        batteryScore: {
+            type: Number,
+            default: 0,
+        },
+
+        cameraScore: {
+            type: Number,
+            default: 0,
+        },
+
+        displayScore: {
+            type: Number,
+            default: 0,
+        },
+
+        overallScore: {
+            type: Number,
+            default: 0,
+        },
+    },
+    {
+        timestamps: true,
     }
-});
+);
 
 const Product = mongoose.model("Product", productSchema, "products");
 
@@ -168,14 +523,146 @@ app.delete("/api/products/:id", async (req, res) => {
     }
 });
 
+// app.put("/api/products/:id", async (req, res) => {
+//     try {
+//         console.log(req.body)
+//         console.log(req.params.id)
+//         // await Product.findByIdAndUpdate(req.params.id, req.body);
+//         // res.json({ success: true });
+
+//         Product.updateOne({
+//             _id: new ObjectId(req.params.id)
+//         }, {
+//             $set: req.body
+//         }).then((sicc) => {
+//             res.json({success: true})
+//         })
+
+//     } catch (err) {
+//         res.status(500).json({ message: "Error updating product" });
+//     }
+// });
+
+
 app.put("/api/products/:id", async (req, res) => {
     try {
-        await Product.findByIdAndUpdate(req.params.id, req.body);
-        res.json({ success: true });
+
+        console.log(req.body);
+        console.log(req.params.id);
+
+        const result = await Product.updateOne(
+            {
+                _id: new ObjectId(req.params.id)
+            },
+            {
+                $set: {
+                    ...req.body,
+                    updatedAt: new Date()
+                }
+            }
+        );
+
+        res.json({
+            success: true,
+            result
+        });
+
     } catch (err) {
-        res.status(500).json({ message: "Error updating product" });
+        console.error(err);
+
+        res.status(500).json({
+            success: false,
+            message: "Error updating product"
+        });
     }
 });
+
+
+// app.put("/api/products/:id", async (req, res) => {
+//     try {
+
+//         console.log(req.body);
+
+//         const {
+//             price,
+//             discount,
+//             stock,
+//             name
+//         } = req.body;
+
+//         if (name !== undefined && !name.trim()) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: "Product name is required"
+//             });
+//         }
+
+//         if (
+//             price !== undefined &&
+//             Number(price) < 0
+//         ) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: "Price cannot be negative"
+//             });
+//         }
+
+//         if (
+//             discount !== undefined &&
+//             (Number(discount) < 0 ||
+//                 Number(discount) > 100)
+//         ) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message:
+//                     "Discount must be between 0 and 100"
+//             });
+//         }
+
+//         if (
+//             stock !== undefined &&
+//             Number(stock) < 0
+//         ) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message:
+//                     "Stock cannot be negative"
+//             });
+//         }
+
+//         req.body.updatedAt = new Date();
+
+//         const updatedProduct =
+//             await Product.findByIdAndUpdate(
+//                 req.params.id,
+//                 req.body,
+//                 {
+//                     new: true,
+//                     runValidators: true
+//                 }
+//             );
+
+//         if (!updatedProduct) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: "Product not found"
+//             });
+//         }
+
+//         res.json({
+//             success: true,
+//             product: updatedProduct
+//         });
+
+//     } catch (err) {
+//         console.error(err);
+
+//         res.status(500).json({
+//             success: false,
+//             message: "Error updating product"
+//         });
+//     }
+// });
 
 // product ends
 
@@ -421,6 +908,7 @@ app.get("/api/productsfilter", async (req, res) => {
 app.get("/api/products/:id", async (req, res) => {
     try {
         const data = await Product.findById(req.params.id);
+        console.log(data)
         res.json(data);
     } catch (err) {
         res.status(500).json({ message: "Error fetching product" });
@@ -563,9 +1051,21 @@ app.post("/api/user/login", async (req, res) => {
 const cartSchema = new mongoose.Schema({
     userId: String,
     productId: String,
-    quantity: Number,
-    selectedSize: String,
-    selectedColor: String,
+    quantity: {
+        type: Number,
+        default: 1
+    },
+
+    selectedVariant: {
+        attributes: {
+            type: Object,
+            default: {}
+        },
+        sku: String,
+        price: Number,
+        image: String
+    },
+
     createdAt: {
         type: Date,
         default: Date.now
@@ -578,45 +1078,59 @@ const Cart = mongoose.model("Cart", cartSchema, "cart");
 
 app.post("/api/cart/add", async (req, res) => {
     try {
-        console.log("BODY:", req.body); // 🔥 CHECK THIS
 
-        const { userId, productId, quantity, selectedSize, selectedColor } = req.body;
+        const {
+            userId,
+            productId,
+            quantity,
+            selectedVariant
+        } = req.body;
 
-        const exist = await Cart.findOne({ userId, productId });
+        let exist;
 
-        if (exist) {
-            exist.quantity += 1;
-            await exist.save();
+        if (selectedVariant?.sku) {
 
-            res.send("not");
-
-        } else {
-            await Cart.create({
+            exist = await Cart.findOne({
                 userId,
                 productId,
-                quantity,
-                selectedSize,
-                selectedColor
+                "selectedVariant.sku": selectedVariant.sku
             });
 
-            // const item = new Cart({
-            //     userId,
-            //     productId,
-            //     quantity,
-            //     selectedSize,
-            //     selectedColor
-            // });
+        } else {
 
-            // await item.save();
-            // res.json({ success: true });
-            res.send("ok");
+            exist = await Cart.findOne({
+                userId,
+                productId
+            });
 
         }
 
+        if (exist) {
+
+            exist.quantity += quantity || 1;
+            await exist.save();
+
+            return res.send("not");
+
+        }
+
+        await Cart.create({
+            userId,
+            productId,
+            quantity: quantity || 1,
+            selectedVariant
+        });
+
+        return res.send("ok");
 
     } catch (err) {
-        console.log("❌ CART ERROR:", err); // 🔥 SEE REAL ERROR
-        res.status(500).json({ message: "Error adding to cart" });
+
+        console.log("❌ CART ERROR:", err);
+
+        res.status(500).json({
+            message: "Error adding to cart"
+        });
+
     }
 });
 
@@ -757,14 +1271,24 @@ const orderSchema = new mongoose.Schema({
         type: String,
         unique: true
     },
+
     userId: String,
 
     items: [
         {
             productId: String,
             name: String,
+            image: String,
+
             price: Number,
-            quantity: Number
+            quantity: Number,
+
+            selectedVariant: {
+                attributes: Object,
+                sku: String,
+                price: Number,
+                image: String
+            }
         }
     ],
 
@@ -787,11 +1311,17 @@ const orderSchema = new mongoose.Schema({
 
     status: {
         type: String,
-        enum: ["Placed", "Processing", "Shipped", "Delivered"],
+        enum: [
+            "Placed",
+            "Processing",
+            "Shipped",
+            "Delivered"
+        ],
         default: "Placed"
     }
 
 }, { timestamps: true });
+
 
 const Order = mongoose.model("Order", orderSchema, "orders");
 
@@ -820,21 +1350,37 @@ app.post("/api/order/checkout", async (req, res) => {
 
         // 🔥 merge cart + product
         const items = cartItems.map(c => {
+
             const product = products.find(
                 p => p._id.toString() === c.productId
             );
 
             return {
                 productId: c.productId,
+
                 name: product?.name || "Unknown",
-                price: product?.price || 0,
-                quantity: c.quantity
+
+                image:
+                    c.selectedVariant?.image ||
+                    product?.image,
+
+                price:
+                    c.selectedVariant?.price ||
+                    product?.salePrice ||
+                    product?.price ||
+                    0,
+
+                quantity: c.quantity,
+
+                selectedVariant:
+                    c.selectedVariant || null
             };
+
         });
 
         // 🔥 total
-        const total = items.reduce((acc, i) => {
-            return acc + i.price * i.quantity;
+        const total = items.reduce((acc, item) => {
+            return acc + item.price * item.quantity;
         }, 0);
 
         // 🔥 generate order id
@@ -997,6 +1543,150 @@ app.post("/api/admin/order/update", async (req, res) => {
 });
 
 
+app.get("/api/order/:id", async (req, res) => {
+    try {
+
+        const { id } = req.params;
+
+        const order = await Order.findById(id);
+
+        if (!order) {
+            return res.status(404).json({
+                message: "Order not found"
+            });
+        }
+
+        const productIds = order.items.map(
+            item => item.productId
+        );
+
+        const products = await Product.find({
+            _id: { $in: productIds }
+        });
+
+        const formattedProducts = order.items.map(item => {
+
+            const product = products.find(
+                p => p._id.toString() === item.productId
+            );
+
+            return {
+                quantity: item.quantity,
+
+                selectedVariant:
+                    item.selectedVariant || null,
+
+                product: {
+                    _id: product?._id,
+                    name:
+                        item.name ||
+                        product?.name,
+
+                    image:
+                        item.selectedVariant?.image ||
+                        item.image ||
+                        product?.image,
+
+                    price:
+                        item.price ||
+                        product?.price
+                }
+            };
+        });
+
+        res.json({
+            _id: order._id,
+            orderId: order.orderId,
+            status: order.status,
+            total: order.total,
+            createdAt: order.createdAt,
+            paymentMethod: order.paymentMethod,
+            address: order.address,
+            products: formattedProducts
+        });
+
+    } catch (err) {
+
+        console.log(err);
+
+        res.status(500).json({
+            message: "Failed to fetch order"
+        });
+
+    }
+});
+
+
+
+app.get("/api/admin/order/:id", async (req, res) => {
+  try {
+
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({
+        message: "Order not found"
+      });
+    }
+
+    const user = await User.findById(
+      order.userId
+    );
+
+    res.json({
+      ...order.toObject(),
+      customer: user
+    });
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      message: "Server Error"
+    });
+  }
+});
+
+
+app.get(
+  "/api/admin/order/:id",
+  async (req, res) => {
+
+    try {
+
+      const order =
+        await Order.findById(
+          req.params.id
+        )
+          .populate(
+            "userId"
+          );
+
+      if (!order) {
+        return res
+          .status(404)
+          .json({
+            message:
+              "Order not found"
+          });
+      }
+
+      res.json(order);
+
+    } catch (err) {
+
+      console.log(err);
+
+      res.status(500).json({
+        message:
+          "Server Error"
+      });
+
+    }
+
+  }
+);
+
+
 
 app.get("/api/admin/dashboard", async (req, res) => {
     try {
@@ -1057,7 +1747,24 @@ app.get("/api/admin/dashboard", async (req, res) => {
 });
 
 
+app.put(
+    "/api/products/compare/:id",
+    async (req, res) => {
 
+        await Product.findByIdAndUpdate(
+            req.params.id,
+            {
+                $inc: {
+                    compareCount: 1
+                }
+            }
+        );
+
+        res.json({
+            success: true
+        });
+    }
+);
 
 
 
